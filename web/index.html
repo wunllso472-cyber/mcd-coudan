@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#c8102e">
+  <title>麦门凑单大师 · 语音点餐</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">凑</span>
+        <div>
+          <h1>麦门凑单大师</h1>
+          <p class="sub">说一句话，凑出最划算的一单</p>
+        </div>
+      </div>
+      <span id="conn" class="conn" data-state="idle">未连接</span>
+    </header>
+
+    <main class="layout">
+      <section class="talk">
+        <div class="stage">
+          <button id="orb" class="orb" data-state="idle" aria-label="开始语音点餐">
+            <span class="ring"></span>
+            <span class="core">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg>
+            </span>
+          </button>
+          <p id="hint" class="hint">点一下开始，直接说「三个人一百块，到店自取，上海人民广场」</p>
+          <div class="controls" hidden id="controls">
+            <button id="muteBtn" class="chip">静音</button>
+            <button id="commitBtn" class="chip" title="说完了模型还没反应时点一下">我说完了</button>
+            <button id="stopBtn" class="chip ghost">结束</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="halfDuplex" checked> 播报时不收音（外放防回声，戴耳机可关闭）</label>
+        </div>
+
+        <div id="working" class="working" hidden><span class="spinner"></span><span id="workingText"></span></div>
+        <div id="chat" class="chat" aria-live="polite"></div>
+      </section>
+
+      <aside class="side">
+        <section id="plansBox" class="panel" hidden>
+          <h2 id="plansTitle">方案</h2>
+          <p id="plansMeta" class="meta"></p>
+          <div id="plans" class="plans"></div>
+        </section>
+
+        <section id="orderBox" class="panel order" hidden></section>
+
+        <section id="phoneBox" class="panel phone" hidden>
+          <h2>在手机上继续</h2>
+          <div id="phoneQr" class="qr"></div>
+          <p class="meta">手机和电脑连同一个 Wi-Fi，扫码打开。首次会提示证书不受信任，选「继续访问」。</p>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="foot">价格由麦当劳 MCP 实时校验，餐品与价格以麦当劳官方渠道为准。本项目非麦当劳官方产品。</footer>
+  </div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <h2 id="sheetTitle">确认下单</h2>
+      <div id="sheetBody"></div>
+      <div class="sheet-actions">
+        <button id="sheetCancel" class="btn ghost">再想想</button>
+        <button id="sheetOk" class="btn primary">确认下单</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

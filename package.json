@@ -1,0 +1,14 @@
+{
+  "name": "mcd-coudan",
+  "version": "0.1.0",
+  "description": "麦门凑单大师：给定预算和人数，用麦当劳 MCP 搜出最划算的一单",
+  "type": "module",
+  "bin": { "mcd-coudan": "src/cli.js" },
+  "scripts": {
+    "start": "node src/cli.js",
+    "voice": "node src/voice/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": { "node": ">=22" },
+  "license": "MIT"
+}
