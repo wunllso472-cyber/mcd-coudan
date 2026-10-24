@@ -158,9 +158,9 @@ npm run voice -- --lan     # 手机：局域网 HTTPS，电脑页面右侧会出
 
 ### 部署到 Render
 
-仓库根目录的 `render.yaml` 已经配好了启动命令 `node src/voice/server.js`。注意不要用默认的 `yarn start`，那是命令行工具，打印完帮助就会退出。
+`npm start` / `yarn start` 启动的就是语音点餐服务（`src/voice/server.js`），Render 默认的启动命令直接可用；仓库根目录也附了 `render.yaml`。
 
-1. Render 控制台 → New → Blueprint，选择本仓库。手动建 Web Service 也可以：Build Command 填 `echo 无需构建`，Start Command 填 `node src/voice/server.js`。
+1. Render 控制台 → New → Web Service（或 Blueprint），选择本仓库，Build Command 和 Start Command 保持默认的 `yarn` / `yarn start` 即可。
 2. 在环境变量里填 `MCD_MCP_TOKEN`、`VOLC_API_KEY`，以及一个足够长的随机口令 `VOICE_ACCESS_KEY`。
 3. 部署完成后打开 `https://<你的服务>.onrender.com/?k=<VOICE_ACCESS_KEY>`，电脑和手机都能直接用，Render 自带 HTTPS，不会有证书提示。
 
