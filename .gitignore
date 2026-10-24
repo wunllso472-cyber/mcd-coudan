@@ -2,3 +2,5 @@ node_modules/
 .env
 debug/
 .mcd-coudan/
+# 含访问口令的本地说明，不提交
+快速使用.md
