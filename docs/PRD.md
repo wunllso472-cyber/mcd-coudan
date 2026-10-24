@@ -348,6 +348,6 @@
 | CONTEST_DECLARATION.md | 根目录，与官方原文一致 | ✅ |
 | MCP_INTEGRATION.md | 根目录，含工具清单与调用时序 | ✅ |
 | 源代码 | `src/`、`web/`、`test/`、`skills/` | ✅ |
-| workbuddy.md | 使用 WorkBuddy 开发时需要提供 | ⏳ 待用户导出 |
+| workbuddy.md | 仅参加 WorkBuddy 专项奖励时需要；本项目未使用 WorkBuddy | ➖ 不参加 |
 | 报名 Issue | 发到 M-China/mcd-developer-innovation-challenge | ⏳ 待用户提交 |
 | 真实使用证据 | 已真实下单一次 | ✅ |
