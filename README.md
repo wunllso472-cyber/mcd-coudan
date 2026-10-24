@@ -156,6 +156,16 @@ npm run voice -- --lan     # 手机：局域网 HTTPS，电脑页面右侧会出
    └─ make_plans / prepare_order / order_status ─► 麦当劳 MCP
 ```
 
+### 部署到 Render
+
+仓库根目录的 `render.yaml` 已经配好了启动命令 `node src/voice/server.js`。注意不要用默认的 `yarn start`，那是命令行工具，打印完帮助就会退出。
+
+1. Render 控制台 → New → Blueprint，选择本仓库。手动建 Web Service 也可以：Build Command 填 `echo 无需构建`，Start Command 填 `node src/voice/server.js`。
+2. 在环境变量里填 `MCD_MCP_TOKEN`、`VOLC_API_KEY`，以及一个足够长的随机口令 `VOICE_ACCESS_KEY`。
+3. 部署完成后打开 `https://<你的服务>.onrender.com/?k=<VOICE_ACCESS_KEY>`，电脑和手机都能直接用，Render 自带 HTTPS，不会有证书提示。
+
+> ⚠️ 线上服务用的是你自己的麦当劳 Token，拿到带口令的链接的人都能用你的账户下单（仍需在页面上手动确认）。口令只发给信任的人，泄露后在 Render 里换一个新口令即可。免费实例闲置一段时间会休眠，再次打开要等几十秒唤醒。
+
 ## 作为 Skill 使用
 
 `skills/mcd-coudan/SKILL.md` 是给 AI Agent 用的 Skill 说明，WorkBuddy、Claude Code 等支持 Skill 的客户端都能用。它支持两种模式：

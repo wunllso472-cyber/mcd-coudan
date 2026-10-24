@@ -2,6 +2,7 @@
 // 麦门凑单大师 · 实时语音点餐服务
 //   node src/voice/server.js          只在本机 http://localhost:8787 提供服务（电脑端）
 //   node src/voice/server.js --lan    局域网 HTTPS（手机端，浏览器要求 HTTPS 才能用麦克风）
+//   部署到 Render 等平台时自动监听 0.0.0.0:$PORT，HTTPS 由平台提供
 import { createServer as createHttp } from 'node:http';
 import { createServer as createHttps } from 'node:https';
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -23,6 +24,7 @@ const { values: opt } = parseArgs({
   options: {
     lan: { type: 'boolean', default: false },
     port: { type: 'string', default: process.env.PORT || '8787' },
+    host: { type: 'string', default: process.env.HOST || '' },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -32,7 +34,8 @@ if (opt.help) {
 
   node src/voice/server.js            电脑端：http://localhost:8787
   node src/voice/server.js --lan      手机端：局域网 HTTPS，自动生成自签证书
-  --port <端口>                        默认 8787
+  --port <端口>                        默认 8787（或环境变量 PORT）
+  --host <地址>                        默认只监听本机；--lan 或在 Render 上运行时为 0.0.0.0
 
 需要的配置（环境变量或项目根目录 .env）：
   MCD_MCP_TOKEN   麦当劳 MCP Token
@@ -99,6 +102,9 @@ const isLocal = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.s
 const port = Number(opt.port);
 const scheme = opt.lan ? 'https' : 'http';
 const ips = opt.lan ? lanIps() : [];
+// Render 会设置 RENDER 和 RENDER_EXTERNAL_URL，平台在前面做 HTTPS 终结，本服务只需监听 HTTP
+const publicUrl = process.env.RENDER_EXTERNAL_URL || '';
+const host = opt.host || (opt.lan || process.env.RENDER ? '0.0.0.0' : '127.0.0.1');
 
 function handle(req, res) {
   const url = new URL(req.url, 'http://x');
@@ -143,8 +149,14 @@ server.on('upgrade', (req, socket, head) => {
   session.start();
 });
 
-server.listen(port, opt.lan ? '0.0.0.0' : '127.0.0.1', () => {
+server.listen(port, host, () => {
   console.log('🍔 麦门凑单大师 · 实时语音点餐\n');
+  if (publicUrl) {
+    console.log(`   线上地址：${publicUrl}/?k=${accessKey}`);
+    if (!process.env.VOICE_ACCESS_KEY) console.log('   ⚠ 没有设置 VOICE_ACCESS_KEY，口令每次重启都会变；建议在平台环境变量里固定一个足够长的随机口令。');
+    console.log('   链接里的 k 是访问口令，持有链接的人可以用你的账户下单，不要外传。\n');
+    return;
+  }
   console.log(`   电脑打开：${scheme}://localhost:${port}/?k=${accessKey}`);
   for (const ip of ips) console.log(`   手机打开：https://${ip}:${port}/?k=${accessKey}`);
   if (opt.lan) console.log('\n   手机需和电脑在同一个 Wi-Fi；首次打开会提示证书不受信任，选「继续访问」即可。');

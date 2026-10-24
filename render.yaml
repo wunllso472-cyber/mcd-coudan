@@ -1,0 +1,19 @@
+# Render Blueprint：部署实时语音点餐页面（src/voice/server.js）
+# 密钥不写在这里，创建服务时在 Render 控制台填写
+services:
+  - type: web
+    name: mcd-coudan-voice
+    runtime: node
+    plan: free
+    buildCommand: echo "零依赖，无需构建"
+    startCommand: node src/voice/server.js
+    healthCheckPath: /
+    envVars:
+      - key: MCD_MCP_TOKEN
+        sync: false
+      - key: VOLC_API_KEY
+        sync: false
+      - key: VOICE_ACCESS_KEY
+        sync: false
+      - key: VOLC_VOICE
+        sync: false
