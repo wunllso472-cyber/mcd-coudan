@@ -17,7 +17,12 @@
           <p class="sub">说一句话，凑出最划算的一单</p>
         </div>
       </div>
-      <span id="conn" class="conn" data-state="idle">未连接</span>
+      <div class="top-right">
+        <span id="conn" class="conn" data-state="idle">未连接</span>
+        <button id="settingsBtn" class="icon-btn" aria-label="设置" title="设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.84a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.67 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.05.7 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.84a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+        </button>
+      </div>
     </header>
 
     <p id="wxTip" class="wx-tip" hidden>微信里打不开麦当劳 App 的收银台。请点右上角 <b>···</b> → <b>在浏览器打开</b>，下单后会直接进入收银台。</p>
@@ -72,6 +77,28 @@
         <button id="sheetCancel" class="btn ghost">再想想</button>
         <button id="sheetOk" class="btn primary">确认下单</button>
       </div>
+    </div>
+  </div>
+
+  <div id="settings" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">设置</h2>
+      <h3 class="field-title">麦当劳 MCP Token</h3>
+      <p id="tokenNow" class="token-now">正在读取…</p>
+      <label class="field">
+        <span class="meta">换成自己的 Token（在 <a href="https://open.mcd.cn/mcp" target="_blank" rel="noopener">open.mcd.cn/mcp</a> 登录 → 控制台 → 复制）</span>
+        <span class="token-input">
+          <input id="tokenInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="粘贴新的 MCP Token">
+          <button id="tokenShow" class="chip" type="button">显示</button>
+        </span>
+      </label>
+      <p id="tokenMsg" class="token-msg" aria-live="polite"></p>
+      <p class="meta">新 Token 先校验再保存，只存在这台设备的浏览器里，只对你自己的语音会话生效，不会改动服务器上的默认 Token。下单、领券都会用这个 Token 对应的麦当劳账户，麦当劳 App 也要登录同一个手机号。</p>
+      <div class="settings-actions">
+        <button id="tokenReset" class="btn ghost" type="button">恢复默认</button>
+        <button id="tokenSave" class="btn primary" type="button">校验并保存</button>
+      </div>
+      <button id="settingsClose" class="btn ghost block" type="button">关闭</button>
     </div>
   </div>
 

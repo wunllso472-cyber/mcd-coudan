@@ -125,6 +125,9 @@ export function parseOrder(res) {
   return { payUrl, orderId, text, ...(orderId ? payLinks(orderId) : {}) };
 }
 
+// 设置页填的 Token：只接受常见的 Token 字符，避免把多余内容拼进请求头
+export const validToken = (t) => typeof t === 'string' && /^[\w.~+/=-]{8,512}$/.test(t);
+
 export class VoiceSession {
   constructor(browser, { apiKey, voice, mcd, url = UPSTREAM_URL, log = () => {} }) {
     this.browser = browser;
@@ -204,6 +207,14 @@ export class VoiceSession {
       case 'cancel_order':
         this.pending = null;
         return this.browser.sendJson({ type: 'confirm_cleared' });
+      case 'set_token':
+        // 浏览器在设置页保存过自己的 Token 时，本次会话改用它下单；空 Token 表示恢复服务器默认。
+        // 只影响本次会话，不改服务器默认 Token，也不影响其他会话
+        if (msg.token && !validToken(msg.token)) return this.error('设置页里保存的 MCP Token 格式不对，已继续使用默认 Token');
+        this.mcd = msg.token ? new McdMcpClient({ token: msg.token }) : new McdMcpClient();
+        this.last = null;   // 换了账户，之前的方案和待确认订单都作废
+        this.pending = null;
+        return this.log(msg.token ? '改用设置页里的自定义 MCP Token' : '恢复使用默认 MCP Token');
       default:
     }
   }

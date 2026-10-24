@@ -120,6 +120,7 @@ async function start() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${proto}//${location.host}/ws?k=${encodeURIComponent(accessKey)}`);
   ws.binaryType = 'arraybuffer';
+  ws.onopen = () => { const token = customToken(); if (token) send({ type: 'set_token', token }); };
   ws.onmessage = (e) => (typeof e.data === 'string' ? onEvent(JSON.parse(e.data)) : player.push(e.data));
   ws.onclose = () => stop('连接已断开');
   ws.onerror = () => bubble('err', '无法连接到本地服务，请确认服务还在运行、访问口令正确');
@@ -343,3 +344,88 @@ if (window.matchMedia('(min-width: 900px)').matches) {
     $('phoneBox').hidden = false;
   }).catch(() => {});
 }
+
+// ---- 设置页：MCP Token ----
+// 自定义 Token 只存在本机浏览器；没有时用服务器默认 Token。读写失败（隐私模式等）就当没有
+const TOKEN_KEY = 'mcd-coudan.token';
+function customToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } }
+function storeToken(token) {
+  try { token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY); return true; } catch { return false; }
+}
+const maskToken = (t) => (t.length > 8 ? `${t.slice(0, 4)}…${t.slice(-4)}` : '****');
+
+const st = {
+  sheet: $('settings'), now: $('tokenNow'), input: $('tokenInput'), show: $('tokenShow'), msg: $('tokenMsg'),
+  save: $('tokenSave'), reset: $('tokenReset'), close: $('settingsClose'),
+};
+let defaultHint = '';
+
+function tokenApi(path, body) {
+  return fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'X-Access-Key': accessKey, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  }).then((r) => r.json());
+}
+
+function tokenMsg(text, state = '') { st.msg.textContent = text; st.msg.dataset.state = state; }
+
+function renderTokenNow() {
+  const custom = customToken();
+  st.now.textContent = custom
+    ? `正在使用：自定义 Token（${maskToken(custom)}）`
+    : `正在使用：服务器默认 Token${defaultHint ? `（${defaultHint}）` : ''}`;
+  st.reset.disabled = !custom;
+}
+
+// 正在对话时立即切换（之前的方案作废，需要重新说一遍需求），否则下次开始对话时生效
+function applyToken(token) {
+  if (ws?.readyState !== WebSocket.OPEN) return '';
+  send({ type: 'set_token', token });
+  return '，本次对话已切换，之前的方案需要重新生成';
+}
+
+$('settingsBtn').addEventListener('click', async () => {
+  st.sheet.hidden = false;
+  st.input.value = '';
+  tokenMsg('');
+  renderTokenNow();
+  try {
+    const r = await tokenApi('/api/token');
+    if (r.hint) { defaultHint = r.hint; renderTokenNow(); } else if (r.error) tokenMsg(r.error, 'error');
+  } catch { tokenMsg('读取默认 Token 失败，请确认服务还在运行', 'error'); }
+});
+
+st.show.addEventListener('click', () => {
+  const hidden = st.input.type === 'password';
+  st.input.type = hidden ? 'text' : 'password';
+  st.show.textContent = hidden ? '隐藏' : '显示';
+});
+
+st.save.addEventListener('click', async () => {
+  const token = st.input.value.trim().replace(/^Bearer\s+/i, '');
+  if (!token) return tokenMsg('请先粘贴新的 Token', 'error');
+  st.save.disabled = true;
+  tokenMsg('正在用这个 Token 访问麦当劳账户…');
+  try {
+    const r = await tokenApi('/api/token/check', { token });
+    if (!r.ok) return tokenMsg(`没有保存：${r.error}`, 'error');
+    if (!storeToken(token)) return tokenMsg('校验通过，但浏览器不允许保存（可能是隐私模式）', 'error');
+    st.input.value = '';
+    renderTokenNow();
+    tokenMsg(`✓ 已保存，账户里有 ${r.addresses} 个配送地址${applyToken(token)}`, 'ok');
+  } catch {
+    tokenMsg('校验失败，请确认服务还在运行', 'error');
+  } finally {
+    st.save.disabled = false;
+  }
+});
+
+st.reset.addEventListener('click', () => {
+  storeToken('');
+  renderTokenNow();
+  tokenMsg(`已恢复为服务器默认 Token${applyToken('')}`, 'ok');
+});
+
+st.close.addEventListener('click', () => { st.sheet.hidden = true; });
+st.sheet.addEventListener('click', (e) => { if (e.target === st.sheet) st.sheet.hidden = true; });

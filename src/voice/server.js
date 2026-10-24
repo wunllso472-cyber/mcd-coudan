@@ -13,7 +13,9 @@ import { execFileSync } from 'node:child_process';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { acceptUpgrade } from './ws-server.js';
-import { VoiceSession } from './session.js';
+import { VoiceSession, validToken } from './session.js';
+import { McdMcpClient } from '../mcp-client.js';
+import { checkAccount } from '../planner.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const WEB = join(ROOT, 'web');
@@ -62,7 +64,8 @@ if (!apiKey) {
   console.error('✖ 没有找到 VOLC_API_KEY：请在火山引擎控制台 > 豆包语音 > API Key 管理 创建，并写入 .env');
   process.exit(1);
 }
-if (!env('MCD_MCP_TOKEN')) {
+const defaultToken = env('MCD_MCP_TOKEN');
+if (!defaultToken) {
   console.error('✖ 没有找到 MCD_MCP_TOKEN：请在 https://open.mcd.cn/mcp 申请，并写入 .env');
   process.exit(1);
 }
@@ -106,8 +109,53 @@ const ips = opt.lan ? lanIps() : [];
 const publicUrl = process.env.RENDER_EXTERNAL_URL || '';
 const host = opt.host || (opt.lan || process.env.RENDER ? '0.0.0.0' : '127.0.0.1');
 
+// 设置页只看得到脱敏后的 Token，完整 Token 不会离开服务端
+const maskToken = (t) => (t.length > 8 ? `${t.slice(0, 4)}…${t.slice(-4)}` : '****');
+
+function sendJson(res, status, body) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(JSON.stringify(body));
+}
+
+function readJson(req, limit = 4096) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) { reject(new Error('请求太大')); req.destroy(); return; }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { reject(new Error('请求格式错误')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+// GET  /api/token        默认 Token 的脱敏信息
+// POST /api/token/check  {token}，校验 Token（留空校验默认 Token），通过才允许前端保存
+async function handleToken(req, res, url) {
+  if (!sameKey(req.headers['x-access-key'] ?? '')) return sendJson(res, 403, { ok: false, error: '访问口令不正确' });
+  if (url.pathname === '/api/token' && req.method === 'GET') return sendJson(res, 200, { hint: maskToken(defaultToken) });
+  if (url.pathname !== '/api/token/check' || req.method !== 'POST') return sendJson(res, 404, { ok: false, error: 'not found' });
+  let token;
+  try { token = String((await readJson(req)).token ?? '').trim(); } catch (err) { return sendJson(res, 400, { ok: false, error: err.message }); }
+  if (token && !validToken(token)) return sendJson(res, 400, { ok: false, error: 'Token 格式不对，请从 open.mcd.cn 控制台完整复制' });
+  try {
+    const { addresses } = await checkAccount(new McdMcpClient({ token: token || defaultToken }));
+    return sendJson(res, 200, { ok: true, hint: maskToken(token || defaultToken), addresses });
+  } catch (err) {
+    return sendJson(res, 200, { ok: false, error: err.message });
+  }
+}
+
 function handle(req, res) {
   const url = new URL(req.url, 'http://x');
+  if (url.pathname.startsWith('/api/token')) {
+    handleToken(req, res, url).catch((err) => sendJson(res, 500, { ok: false, error: err.message }));
+    return;
+  }
   // 电脑页面用来生成手机扫码地址，只回答本机请求
   if (url.pathname === '/api/info') {
     const phone = isLocal(req) && ips.length ? `https://${ips[0]}:${port}/?k=${accessKey}` : null;

@@ -45,6 +45,13 @@ export async function findPickupStores(client, { city, near }) {
   return (list || []).map((s) => ({ ...s, orderType: 1, beType: 1, beCode: undefined }));
 }
 
+// 用一次只读调用校验 Token 能否访问账户，返回配送地址数量；无效 Token 会抛出 401
+export async function checkAccount(client) {
+  const addrs = await call(client, 'delivery-query-addresses', {});
+  const list = Array.isArray(addrs) ? addrs : addrs?.addresses ?? addrs?.list ?? [];
+  return { addresses: list.length };
+}
+
 export async function findDeliveryStore(client, { addressId } = {}) {
   const addrs = await call(client, 'delivery-query-addresses', {});
   const list = Array.isArray(addrs) ? addrs : addrs?.addresses ?? addrs?.list ?? [];
