@@ -284,10 +284,14 @@ els.sheetOk.addEventListener('click', () => {
 });
 els.sheetCancel.addEventListener('click', () => { send({ type: 'cancel_order' }); closeConfirm(); });
 
+const inWechat = /micromessenger/i.test(navigator.userAgent);
+$('wxTip').hidden = !inWechat;
+
 // 唤起麦当劳 App 收银台；2 秒内页面没被切走（没装 App 或被拦截）就退回官方跳转页
 function openPay(appUrl, jumpUrl) {
-  if (/micromessenger/i.test(navigator.userAgent)) {
-    location.href = jumpUrl; // 微信里自定义协议会被拦截，官方跳转页会用微信开放标签拉起 App
+  if (inWechat) {
+    // 微信会拦截自定义协议，只能去官方跳转页手动拉起 App，且实测不会带上订单直接进收银台
+    location.href = jumpUrl;
     return;
   }
   const timer = setTimeout(() => { if (!document.hidden) location.href = jumpUrl; }, 2000);

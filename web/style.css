@@ -131,3 +131,6 @@ h1 { font-size: 19px; margin: 0; letter-spacing: .5px; }
 .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--line); padding-top: 10px; }
 
 .foot { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0 4px; }
+
+/* 微信内置浏览器提示：微信会拦截 mcdapp://，只能引导到系统浏览器 */
+.wx-tip { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--gold-soft); color: var(--ink); font-size: 14px; line-height: 1.5; }
