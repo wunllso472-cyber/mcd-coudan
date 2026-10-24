@@ -304,13 +304,17 @@ function renderOrder({ payUrl, orderId, appUrl, jumpUrl, text, price, label }) {
     <h2>下单成功</h2>
     <p class="meta">${esc(label)} · ${yuan(price)}${orderId ? ` · 订单号 ${esc(orderId)}` : ''}</p>
     ${appUrl
-      ? '<button class="btn primary block pay" id="payBtn">去支付</button><p class="meta">会打开麦当劳 App 的收银台，可以选支付宝付款。需要已安装麦当劳 App 并用同一手机号登录。</p>'
+      ? '<button class="btn primary block pay" id="payBtn">去支付</button><p class="meta">会打开麦当劳 App 的收银台，在收银台选支付宝付款。需要已安装麦当劳 App 并用同一手机号登录。</p>'
       : payUrl ? `<a class="btn primary pay" href="${esc(payUrl)}" target="_blank" rel="noopener">去支付</a>` : '<p class="meta">请打开麦当劳 App 的订单页完成支付。</p>'}
     ${scanUrl && desktop ? '<p class="meta">用手机扫码，打开麦当劳 App 付款：</p><div class="qr" id="payQr"></div>' : ''}
     <details><summary class="meta">麦当劳返回的原始信息</summary><pre>${esc(text)}</pre></details>`;
   if (appUrl) $('payBtn').addEventListener('click', () => openPay(appUrl, jumpUrl));
   if (scanUrl && desktop) qrcode($('payQr'), scanUrl).then((ok) => { if (!ok) $('payQr').remove(); });
   els.orderBox.scrollIntoView({ behavior: 'smooth' });
+  // 手机上「确认下单」的点击还有效时直接拉起收银台，省掉再点一次「去支付」；
+  // 点击已失效（下单太慢）或浏览器不支持判断时，浏览器会拦截跳转，所以只留按钮
+  const mobile = /android|iphone|ipad|harmonyos|openharmony/i.test(navigator.userAgent);
+  if (appUrl && mobile && navigator.userActivation?.isActive) openPay(appUrl, jumpUrl);
 }
 
 els.orb.addEventListener('click', () => {
