@@ -67,6 +67,8 @@ $ node src/cli.js plan --people 2 --budget 80 --delivery
 
 > 菜单和价格随门店、时间变化，以上仅为示例。
 
+> 📖 完整的使用说明（准备清单、点餐与付款流程、设置页、常见问题、部署方法）见 [docs/使用说明.md](docs/使用说明.md)。
+
 ## 安装
 
 需要 Node.js 22 或更高版本（语音点餐用到 Node 自带的 WebSocket 客户端），不需要 `npm install`，没有任何第三方依赖。
